@@ -33,6 +33,7 @@
 
 #include "reqchannel.H"
 #include "BoundedBuffer.H"
+#include "NetworkRequestChannel.H"
 #include <pthread.h>
 
 using namespace std;
