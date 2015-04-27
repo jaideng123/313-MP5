@@ -86,6 +86,21 @@ void * handle_data_requests(void * args) {
  
   delete data_channel;
 }
+void* connection_handler(void* args) {
+  int socket = *(int*)args;
+  int continue_processing = 1;
+    
+  while(continue_processing) {
+    char buf[MAX_MESSAGE];
+        
+    if (read(socket, buf, MAX_MESSAGE) < 0) {
+      perror(string("SERVER ERROR: Error reading from pipe!").c_str());
+    } 
+        
+    string request = buf;
+  }
+
+}
 
 /*--------------------------------------------------------------------------*/
 /* LOCAL FUNCTIONS -- INDIVIDUAL REQUESTS */

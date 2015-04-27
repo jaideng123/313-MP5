@@ -39,9 +39,19 @@ public:
 		assert(rc == 0);
 		//now for the good stuff
 		int mainfd = fd;
-		
-		
-		
+		struct sockaddr_in client_addr;
+		while(1) { 
+        
+ 			int sin_size = sizeof(client_addr);
+        	int new_fd = accept(mainfd, (struct sockaddr *)&client_addr, (socklen_t*) &sin_size);
+
+        	if (new_fd == -1) {
+            	perror("SERVER: Accept error.");
+            	continue;
+        	}
+        
+        	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
+    	}
 	}
 	/* Creates a SERVER-SIDE local copy of the channel that is accepting connections
 	at the given port number.
@@ -63,5 +73,6 @@ public:
 	int cwrite(string _msg){}
 	/* Write the data to the channel. The function returns the number of
 	characters written to the channel. */
+
 private:
 };
