@@ -16,12 +16,22 @@
 class NetworkRequestChannel {
 public:
 	int connfd;
-	NetworkRequestChannel(const string _server_host_name, const unsigned short _port_no){}
+	NetworkRequestChannel(const string _server_host_name, const unsigned short _port_no){
+		connfd = socket(AF_INET,SOCK_STREAM,0);
+		struct hostent *hp;
+		hp = gethostbyname(_server_host_name.c_str());
+		struct sockaddr_in serveraddr;
+		bzero((char*) &serveraddr,sizeof(serveraddr));
+		serveraddr.sin_family = AF_INET;
+		bcopy((char*) hp->h_addr_list[0],(char*) &serveraddr.sin_addr.s_addr,hp->h_length);
+		serveraddr.sin_port = htons(_port_no);
+		int rc = connect(connfd,(struct sockaddr*) &serveraddr,sizeof(serveraddr));
+	}
 	/* Creates a CLIENT-SIDE local copy of the channel. The channel is connected
 	to the given port number at the given server host.
 	THIS CONSTRUCTOR IS CALLED BY THE CLIENT. */
 	NetworkRequestChannel(const unsigned short _port_no,
-	void * (*connection_handler) (int *)){
+	void * (*connection_handler) (void *)){
 		//open socket and listen
 		int fd, optval = 1;
 		struct sockaddr_in addr;
@@ -30,7 +40,7 @@ public:
 		setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,(const void *) &optval,sizeof(int));
 		bzero((char*) &addr,sizeof(addr));
 		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = honl(INADDR_ANY);
+		addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		addr.sin_port = htons(_port_no);
 		//bind
 		int rc = bind(fd,(struct sockaddr*) &addr,sizeof(addr));
@@ -50,7 +60,7 @@ public:
             	perror("SERVER: Accept error.");
             	continue;
         	}
-        
+        	pthread_t _new_thread;
         	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
     	}
 	}
@@ -70,13 +80,17 @@ public:
 	/* Send a string over the channel and wait for a reply. */
 	string cread(){
 		string rc;
-		read(connfd,rc,1000);
+		char data[1000];
+		read(connfd,data,1000);
+		rc = data;
 		return rc;
 	}
 	/* Blocking read of data from the channel. Returns a string of characters
 	read from the channel. Returns NULL if read failed. */
 	int cwrite(string _msg){
-		return write(connfd,_msg,strlen(msg)+1);
+		char* data = &_msg[0];
+		return write(connfd,data,strlen(_msg.c_str())+1);
+
 	}
 	/* Write the data to the channel. The function returns the number of
 	characters written to the channel. */

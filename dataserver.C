@@ -91,9 +91,9 @@ void* connection_handler(void* args) {
   int continue_processing = 1;
     
   while(continue_processing) {
-    char buf[MAX_MESSAGE];
+    char buf[1000];
         
-    if (read(socket, buf, MAX_MESSAGE) < 0) {
+    if (read(socket, buf, 1000) < 0) {
       perror(string("SERVER ERROR: Error reading from pipe!").c_str());
     } 
         
