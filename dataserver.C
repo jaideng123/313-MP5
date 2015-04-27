@@ -98,6 +98,19 @@ void* connection_handler(void* args) {
     } 
         
     string request = buf;
+    // if (_request.compare(0, 5, "hello") == 0) {
+    //   process_hello(_channel, _request);
+    // }
+    // else if (_request.compare(0, 4, "data") == 0) {
+    //   process_data(_channel, _request);
+    // }
+    // else if (_request.compare(0, 9, "newthread") == 0) {
+    //   process_newthread(_channel, _request);
+    // }
+    // else {
+    //   _channel.cwrite("unknown request");
+    // }
+
   }
 
 }

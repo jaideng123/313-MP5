@@ -15,6 +15,7 @@
 
 class NetworkRequestChannel {
 public:
+	int connfd;
 	NetworkRequestChannel(const string _server_host_name, const unsigned short _port_no){}
 	/* Creates a CLIENT-SIDE local copy of the channel. The channel is connected
 	to the given port number at the given server host.
@@ -44,7 +45,7 @@ public:
         
  			int sin_size = sizeof(client_addr);
         	int new_fd = accept(mainfd, (struct sockaddr *)&client_addr, (socklen_t*) &sin_size);
-
+        	connfd = new_fd;
         	if (new_fd == -1) {
             	perror("SERVER: Accept error.");
             	continue;
@@ -67,10 +68,16 @@ public:
 	/* Destructor of the local copy of the channel. */
 	string send_request(string _request){}
 	/* Send a string over the channel and wait for a reply. */
-	string cread(){}
+	string cread(){
+		string rc;
+		read(connfd,rc,1000);
+		return rc;
+	}
 	/* Blocking read of data from the channel. Returns a string of characters
 	read from the channel. Returns NULL if read failed. */
-	int cwrite(string _msg){}
+	int cwrite(string _msg){
+		return write(connfd,_msg,strlen(msg)+1);
+	}
 	/* Write the data to the channel. The function returns the number of
 	characters written to the channel. */
 
