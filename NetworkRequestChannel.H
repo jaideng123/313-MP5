@@ -17,15 +17,30 @@ class NetworkRequestChannel {
 public:
 	int connfd;
 	NetworkRequestChannel(const string _server_host_name, const unsigned short _port_no){
-		connfd = socket(AF_INET,SOCK_STREAM,0);
-		struct hostent *hp;
-		hp = gethostbyname(_server_host_name.c_str());
-		struct sockaddr_in serveraddr;
-		bzero((char*) &serveraddr,sizeof(serveraddr));
-		serveraddr.sin_family = AF_INET;
-		bcopy((char*) hp->h_addr_list[0],(char*) &serveraddr.sin_addr.s_addr,hp->h_length);
-		serveraddr.sin_port = htons(_port_no);
-		int rc = connect(connfd,(struct sockaddr*) &serveraddr,sizeof(serveraddr));
+		struct sockaddr_in sockIn;
+		memset(&sockIn, 0, sizeof(sockIn));
+		sockIn.sin_family = AF_INET;
+		char str[15];
+		sprintf(str, "%d", _port_no);
+		if(struct servent * pse = getservbyname(str, "tcp"))//make port
+			sockIn.sin_port = pse->s_port;
+
+		else if ((sockIn.sin_port = htons((unsigned short)_port_no)) == 0)
+			cerr << "cant connect port\n";
+
+		if(struct hostent * hn = gethostbyname(_server_host_name.c_str()))
+			memcpy(&sockIn.sin_addr, hn->h_addr, hn->h_length);
+
+		else if((sockIn.sin_addr.s_addr = inet_addr(_server_host_name.c_str())) == INADDR_NONE)
+			cerr << "cant determine host <" <<  _server_host_name << ">\n";
+
+		int s = socket(AF_INET, SOCK_STREAM, 0);
+		if(s < 0)
+			cerr << "cant create socket\n";
+
+		if(connect(s, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
+			cerr << "cant connect to " <<  _server_host_name << ":" << _port_no<<endl;
+		connfd = s;
 	}
 	/* Creates a CLIENT-SIDE local copy of the channel. The channel is connected
 	to the given port number at the given server host.
@@ -44,6 +59,7 @@ public:
 		addr.sin_port = htons(_port_no);
 		//bind
 		int rc = bind(fd,(struct sockaddr*) &addr,sizeof(addr));
+		cout<<"called server: "<<rc<<endl;
 		assert(rc == 0);
 		//listen
 		rc = listen(fd,1024);
@@ -61,9 +77,10 @@ public:
         	}
         	pthread_t _new_thread;
         	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
-			pthread_join(_new_thread, NULL);
-			close(new_fd);
+			pthread_detach(_new_thread); 
     	}
+		close(mainfd);
+		cout<<"Closed Server\n";
 	}
 	/* Creates a SERVER-SIDE local copy of the channel that is accepting connections
 	at the given port number.
@@ -95,7 +112,10 @@ public:
 	read from the channel. Returns NULL if read failed. */
 	int cwrite(string _msg){
 		char* data = &_msg[0];
-		return write(connfd,data,strlen(_msg.c_str())+1);
+		int success = write(connfd,data,strlen(_msg.c_str())+1);
+		if(success == -1)
+			cout<<"Bad Write\n";
+		return success;
 
 	}
 	/* Write the data to the channel. The function returns the number of

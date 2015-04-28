@@ -192,7 +192,8 @@ int main(int argc, char * argv[]) {
   hist[0] = temp;
   hist[1] = temp;
   hist[2] = temp;
-  NetworkRequestChannel chan("linux2.cse.tamu.edu",10000);
+  NetworkRequestChannel chan("localhost",10000);
+  sleep(5000);
   Semaphore s(1);
   BoundedBuffer b(bb,&s);
   Arguments arg1;
@@ -217,7 +218,7 @@ int main(int argc, char * argv[]) {
   BoundedBuffer hist3(bb,&s);
   for (int i = 0; i < w; ++i)
   {
-    arr[i].channel = 10000;
+    arr[i].channel = 20000;
     arr[i].b = &b;
 	arr[i].b1 = &hist1;
 	arr[i].b2 = &hist2;

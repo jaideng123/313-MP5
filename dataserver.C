@@ -78,7 +78,7 @@ void process_hello(int sock, string & _request) {
 void process_data(int sock, const string &  _request) {
   usleep(1000 + (rand() % 5000));
   string r = int2string(rand() % 100);
-  char* data = &r[0];
+  char* data = const_cast<char*>(r.c_str());
   write(sock,data,strlen(r.c_str())+1);
 }
 /*--------------------------------------------------------------------------*/
@@ -108,6 +108,7 @@ void* connection_handler(void* args) {
 		process_data(socket, request);
 	}
   }
+  //close(socket);
 
 }
 
@@ -118,7 +119,7 @@ void* connection_handler(void* args) {
 int main(int argc, char * argv[]) {
 
   //  cout << "Establishing control channel... " << flush;
-  NetworkRequestChannel control_channel(10000,connection_handler);
+  NetworkRequestChannel control_channel(20000,connection_handler);
 
 }
 
