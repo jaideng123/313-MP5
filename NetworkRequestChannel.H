@@ -62,6 +62,7 @@ public:
         	}
         	pthread_t _new_thread;
         	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
+			close(new_fd);
     	}
 	}
 	/* Creates a SERVER-SIDE local copy of the channel that is accepting connections
@@ -74,7 +75,9 @@ public:
 	NOTE that the connection handler does not want to deal with
 	closing the socket. You will have to close the socket once the
 	connection handler is done. */
-	~NetworkRequestChannel(){}
+	~NetworkRequestChannel(){
+		close(connfd);
+	}
 	/* Destructor of the local copy of the channel. */
 	string send_request(string _request){}
 	/* Send a string over the channel and wait for a reply. */
