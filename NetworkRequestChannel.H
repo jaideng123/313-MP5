@@ -52,7 +52,6 @@ public:
 		int mainfd = fd;
 		struct sockaddr_in client_addr;
 		while(1) { 
-        
  			int sin_size = sizeof(client_addr);
         	int new_fd = accept(mainfd, (struct sockaddr *)&client_addr, (socklen_t*) &sin_size);
         	connfd = new_fd;
@@ -62,6 +61,7 @@ public:
         	}
         	pthread_t _new_thread;
         	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
+			pthread_join(_new_thread, NULL);
 			close(new_fd);
     	}
 	}
@@ -79,7 +79,10 @@ public:
 		close(connfd);
 	}
 	/* Destructor of the local copy of the channel. */
-	string send_request(string _request){}
+	string send_request(string _request){
+		cwrite(_request);
+		return cread();
+	}
 	/* Send a string over the channel and wait for a reply. */
 	string cread(){
 		string rc;

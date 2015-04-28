@@ -46,7 +46,7 @@ struct Arguments{
   char id;
   int rep;
   BoundedBuffer* b;
-  string channel;
+  int channel;
   BoundedBuffer * b1;
   BoundedBuffer * b2;
   BoundedBuffer * b3;
@@ -78,7 +78,7 @@ void *request(void *param){
 }
 void *worker(void *param){
   Arguments* arg = (Arguments *)param;
-  RequestChannel chan(arg->channel, RequestChannel::CLIENT_SIDE);
+  NetworkRequestChannel chan("linux2.cse.tamu.edu",arg->channel);
   while(arg->b->numFinished < 3 || arg->b->getSize() > 0){
     Item i = arg->b->remove();
     if(i.getMessage() != "NULL" && i.getPerson() != 'n'){
@@ -192,7 +192,7 @@ int main(int argc, char * argv[]) {
   hist[0] = temp;
   hist[1] = temp;
   hist[2] = temp;
-  RequestChannel chan("control", RequestChannel::CLIENT_SIDE);
+  NetworkRequestChannel chan("linux2.cse.tamu.edu",10000);
   Semaphore s(1);
   BoundedBuffer b(bb,&s);
   Arguments arg1;
@@ -217,7 +217,7 @@ int main(int argc, char * argv[]) {
   BoundedBuffer hist3(bb,&s);
   for (int i = 0; i < w; ++i)
   {
-    arr[i].channel = chan.send_request("newthread");
+    arr[i].channel = 10000;
     arr[i].b = &b;
 	arr[i].b1 = &hist1;
 	arr[i].b2 = &hist2;

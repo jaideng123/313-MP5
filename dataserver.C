@@ -112,20 +112,13 @@ void* connection_handler(void* args) {
 }
 
 /*--------------------------------------------------------------------------*/
-/* LOCAL FUNCTIONS -- INDIVIDUAL REQUESTS */
-/*--------------------------------------------------------------------------*/
-
-/*--------------------------------------------------------------------------*/
 /* MAIN FUNCTION */
 /*--------------------------------------------------------------------------*/
 
 int main(int argc, char * argv[]) {
 
   //  cout << "Establishing control channel... " << flush;
-  //NetworkRequestChannel control_channel("control", RequestChannel::SERVER_SIDE);
-  //  cout << "done.\n" << flush;
-
-  //handle_process_loop(control_channel);
+  NetworkRequestChannel control_channel(10000,connection_handler);
 
 }
 
