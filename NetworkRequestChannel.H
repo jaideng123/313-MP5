@@ -11,106 +11,66 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<assert.h>
-#include <sstream>
 
 
 class NetworkRequestChannel {
 public:
 	int connfd;
-	struct sockaddr_in serverIn;
-	
-	int createServerConnection(const char * svc)
-	{
-
-	memset(&serverIn, 0, sizeof(serverIn));
-	serverIn.sin_family = AF_INET;
-	serverIn.sin_addr.s_addr = INADDR_ANY;
-
-	if(struct servent * pse = getservbyname(svc, "tcp"))
-		serverIn.sin_port = pse->s_port;
-
-	else if((serverIn.sin_port = htons((unsigned short)atoi(svc))) == 0)
-		cerr << "can't get port\n";
-
-
-	int socknum  = socket(AF_INET, SOCK_STREAM, 0);
-
-	if(socknum < 0)
-		cerr << "can't create socket \n";
-
-	if(bind(socknum, (struct sockaddr *)&serverIn, sizeof(serverIn)) < 0)
-		cerr << "can't bind...\n";
-
-	listen(socknum,30);//check for connections
-
-	return socknum;
-	}
-	
 	NetworkRequestChannel(const string _server_host_name, const unsigned short _port_no){
-		struct sockaddr_in sockIn;
-		memset(&sockIn, 0, sizeof(sockIn));
-		sockIn.sin_family = AF_INET;
-		char str[15];
-		sprintf(str, "%d", _port_no);
-		if(struct servent * pse = getservbyname(str, "tcp"))//make port
-			sockIn.sin_port = pse->s_port;
-
-		else if ((sockIn.sin_port = htons((unsigned short)_port_no)) == 0)
-			cerr << "cant connect port\n";
-
-		if(struct hostent * hn = gethostbyname(_server_host_name.c_str()))
-			memcpy(&sockIn.sin_addr, hn->h_addr, hn->h_length);
-
-		else if((sockIn.sin_addr.s_addr = inet_addr(_server_host_name.c_str())) == INADDR_NONE)
-			cerr << "cant determine host <" <<  _server_host_name << ">\n";
-
-		int s = socket(AF_INET, SOCK_STREAM, 0);
-		if(s < 0)
-			cerr << "cant create socket\n";
-
-		if(connect(s, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
-			cerr << "cant connect to " <<  _server_host_name << ":" << _port_no<<endl;
-		connfd = s;
+		connfd = socket(AF_INET,SOCK_STREAM,0);
+		struct hostent *hp;
+		hp = gethostbyname(_server_host_name.c_str());
+		if (hp == NULL) {
+			fprintf(stderr,"ERROR, no such host\n");
+			exit(0);
+		}	
+		struct sockaddr_in serveraddr;
+		bzero((char*) &serveraddr,sizeof(serveraddr));
+		serveraddr.sin_family = AF_INET;
+		bcopy((char*) hp->h_addr,(char*) &serveraddr.sin_addr.s_addr,hp->h_length);
+		serveraddr.sin_port = htons(_port_no);
+		int rc = connect(connfd,(struct sockaddr*) &serveraddr,sizeof(serveraddr));
+		if(rc == -1)
+			cout<<"Cannot Connect\n";
+		else
+			cout<<"Connected Successfully!\n";
 	}
 	/* Creates a CLIENT-SIDE local copy of the channel. The channel is connected
 	to the given port number at the given server host.
 	THIS CONSTRUCTOR IS CALLED BY THE CLIENT. */
-	
 	NetworkRequestChannel(const unsigned short _port_no,
 	void * (*connection_handler) (void *)){
-		stringstream ss;
-	ss << _port_no;
-	string port = ss.str();
-
-	int master = createServerConnection(port.c_str());
-	int serverSize = sizeof(serverIn);
-
-
-	while(true)
-	{
-		int * slave = new int;
-
-		pthread_t thread;
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-
-
-		*slave = accept(master,(struct sockaddr*)&serverIn, (socklen_t*)&serverSize);
-
-		if(slave < 0)
-		{
-			delete slave;
-
-			if(errno == EINTR)
-                continue;//retry
-			else cerr << "unknown error in accept()\n";
-		}
-
-		pthread_create(&thread, &attr, connection_handler, (void*)slave);
-
-
-	}
-	cout << "Connection complete\n";
+		//open socket and listen
+		int fd, optval = 1;
+		struct sockaddr_in addr;
+		fd = socket(AF_INET,SOCK_STREAM,0);
+		assert(fd > -1);
+		setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,(const void *) &optval,sizeof(int));
+		bzero((char*) &addr,sizeof(addr));
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		addr.sin_port = htons(_port_no);
+		//bind
+		int rc = bind(fd,(struct sockaddr*) &addr,sizeof(addr));
+		assert(rc == 0);
+		//listen
+		rc = listen(fd,1024);
+		assert(rc == 0);
+		//now for the good stuff
+		int mainfd = fd;
+		struct sockaddr_in client_addr;
+		while(1) { 
+ 			int sin_size = sizeof(client_addr);
+        	int new_fd = accept(mainfd, (struct sockaddr *)&client_addr, (socklen_t*) &sin_size);
+        	connfd = new_fd;
+        	if (new_fd == -1) {
+            	perror("SERVER: Accept error.");
+            	continue;
+        	}
+        	pthread_t _new_thread;
+        	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
+			//close(new_fd);
+    	}
 	}
 	/* Creates a SERVER-SIDE local copy of the channel that is accepting connections
 	at the given port number.
@@ -142,10 +102,7 @@ public:
 	read from the channel. Returns NULL if read failed. */
 	int cwrite(string _msg){
 		char* data = &_msg[0];
-		int success = write(connfd,data,strlen(_msg.c_str())+1);
-		if(success == -1)
-			cout<<"Bad Write\n";
-		return success;
+		return write(connfd,data,strlen(_msg.c_str())+1);
 
 	}
 	/* Write the data to the channel. The function returns the number of

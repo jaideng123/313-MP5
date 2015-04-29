@@ -78,7 +78,7 @@ void *request(void *param){
 }
 void *worker(void *param){
   Arguments* arg = (Arguments *)param;
-  NetworkRequestChannel chan("linux2.cse.tamu.edu",arg->channel);
+  NetworkRequestChannel chan("localhost",arg->channel);
   while(arg->b->numFinished < 3 || arg->b->getSize() > 0){
     Item i = arg->b->remove();
     if(i.getMessage() != "NULL" && i.getPerson() != 'n'){
@@ -192,7 +192,7 @@ int main(int argc, char * argv[]) {
   hist[0] = temp;
   hist[1] = temp;
   hist[2] = temp;
-  NetworkRequestChannel chan("localhost",10000);
+  NetworkRequestChannel chan("localhost",20000);
   sleep(5000);
   Semaphore s(1);
   BoundedBuffer b(bb,&s);

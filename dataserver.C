@@ -108,7 +108,7 @@ void* connection_handler(void* args) {
 		process_data(socket, request);
 	}
   }
-  //close(socket);
+  close(socket);
 
 }
 
