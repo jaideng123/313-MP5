@@ -162,6 +162,7 @@ int main(int argc, char * argv[]) {
       cout<<"Error, fork failed"<<endl;
     return -1;
   }
+  sleep(2);//give server time to spin up
   int c;
   int index;
   int n = 10; //number of data requests per person

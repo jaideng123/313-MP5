@@ -70,7 +70,7 @@ public:
         	}
         	pthread_t _new_thread;
         	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);\
-			sleep(5);
+			sleep(2);
 			//close(new_fd);
     	}
 	}
