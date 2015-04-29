@@ -135,7 +135,7 @@ int main(int argc, char * argv[]) {
 	}
   }
   //  cout << "Establishing control channel... " << flush;
-  NetworkRequestChannel control_channel(sock,connection_handler);
+  NetworkRequestChannel control_channel(sock,connection_handler,back_log);
   cout<<"Server Closed";
 
 }

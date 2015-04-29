@@ -37,7 +37,7 @@ public:
 	to the given port number at the given server host.
 	THIS CONSTRUCTOR IS CALLED BY THE CLIENT. */
 	NetworkRequestChannel(const unsigned short _port_no,
-	void * (*connection_handler) (void *)){
+	void * (*connection_handler) (void *),int backlog){
 		//open socket and listen
 		cout<<"Server Called"<<endl;
 		int fd, optval = 1;
@@ -53,7 +53,7 @@ public:
 		int rc = bind(fd,(struct sockaddr*) &addr,sizeof(addr));
 		assert(rc == 0);
 		//listen
-		rc = listen(fd,1024);
+		rc = listen(fd,backlog);
 		assert(rc == 0);
 		//now for the good stuff
 		int mainfd = fd;
