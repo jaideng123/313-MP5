@@ -34,6 +34,10 @@ public:
 					numFinished++;
 					s->V();}
 	int numFinished;
+	int getFinished(){s->P();
+					int result = numFinished;
+					s->V();
+					return result;}
 	int getSize() {return buffer.size(); }
 private:
 	vector<Item> buffer;

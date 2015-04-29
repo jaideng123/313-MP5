@@ -68,6 +68,8 @@ struct Arguments{
 /* MAIN FUNCTION */
 /*--------------------------------------------------------------------------*/
 vector< vector<int> > hist(3);
+string host_name = "localhost";
+int sock = 20000;
 void *request(void *param){
   Arguments *args = (Arguments *)param;
   for(int i = 0; i < args->rep; ++i){
@@ -78,8 +80,8 @@ void *request(void *param){
 }
 void *worker(void *param){
   Arguments* arg = (Arguments *)param;
-  NetworkRequestChannel chan("localhost",arg->channel);
-  while(arg->b->numFinished < 3 || arg->b->getSize() > 0){
+  NetworkRequestChannel chan(host_name,sock);
+  while(arg->b->getFinished() < 3 || arg->b->getSize() > 0){
     Item i = arg->b->remove();
     if(i.getMessage() != "NULL" && i.getPerson() != 'n'){
       i.setData(chan.send_request(i.getMessage()));
@@ -134,7 +136,7 @@ void printHist(){
 }
 void *histogram(void *param){
 	Arguments* arg = (Arguments *)param;
-	while(arg->b->numFinished < arg->rep || arg->b->getSize() > 0){
+	while(arg->b->getFinished() < arg->rep || arg->b->getSize() > 0){
 		 Item i = arg->b->remove();
 		 if(i.getMessage() != "NULL" && i.getPerson() != 'n'){
 			 cout<<"Data:"<<i.getData()<<endl;
@@ -149,26 +151,12 @@ void *histogram(void *param){
 }
 
 int main(int argc, char * argv[]) {
-  pid_t parent = getpid();
-  pid_t pid = fork();
-  if (pid == -1)
-  {
-    // error, failed to fork()
-  } 
-  else if(pid == 0){
-    // we are the child
-     char *arg[12];
-    if(execv("./dataserver",argv) == -1)
-      cout<<"Error, fork failed"<<endl;
-    return -1;
-  }
-  sleep(2);//give server time to spin up
   int c;
   int index;
   int n = 10; //number of data requests per person
   int bb = 15; //size of bounded buffer in requests
   int w = 3; //number of worker threads
-  while ((c = getopt (argc, argv, "n:b:w:")) != -1) {
+  while ((c = getopt (argc, argv, "n:b:w:s:h:")) != -1) {
   switch(c) {
 	case 'n':
 		n = atoi(optarg);
@@ -178,6 +166,12 @@ int main(int argc, char * argv[]) {
 		break;
 	case 'w':
 		w = atoi(optarg);
+		break;
+	case 's':
+		sock = atoi(optarg);
+		break;
+	case 'h':
+		host_name = optarg;
 		break;
 	case '?':
 		return 1;
@@ -217,7 +211,6 @@ int main(int argc, char * argv[]) {
   BoundedBuffer hist3(bb,&s);
   for (int i = 0; i < w; ++i)
   {
-    arr[i].channel = 20000;
     arr[i].b = &b;
 	arr[i].b1 = &hist1;
 	arr[i].b2 = &hist2;

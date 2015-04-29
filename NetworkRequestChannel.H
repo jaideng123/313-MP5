@@ -30,10 +30,8 @@ public:
 		bcopy((char*) hp->h_addr,(char*) &serveraddr.sin_addr.s_addr,hp->h_length);
 		serveraddr.sin_port = htons(_port_no);
 		int rc = connect(connfd,(struct sockaddr*) &serveraddr,sizeof(serveraddr));
-		if(rc == -1)
-			cout<<"Cannot Connect"<<connfd<<endl;
-		else
-			cout<<"Connected Successfully!\n";
+		while(rc == -1)//keep trying to connect
+			rc = connect(connfd,(struct sockaddr*) &serveraddr,sizeof(serveraddr));
 	}
 	/* Creates a CLIENT-SIDE local copy of the channel. The channel is connected
 	to the given port number at the given server host.
@@ -70,7 +68,7 @@ public:
         	}
         	pthread_t _new_thread;
         	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);\
-			sleep(2);
+			usleep(50000);
 			//close(new_fd);
     	}
 	}

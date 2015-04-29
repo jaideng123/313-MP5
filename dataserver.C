@@ -117,9 +117,26 @@ void* connection_handler(void* args) {
 /*--------------------------------------------------------------------------*/
 
 int main(int argc, char * argv[]) {
-
+  int sock = 20000;
+  int back_log = 10;
+  int c;
+  while ((c = getopt (argc, argv, "b:s:h:")) != -1) {
+  switch(c) {
+	case 'b':
+		back_log = atoi(optarg);
+		break;
+	case 's':
+		sock = atoi(optarg);
+		break;
+	case '?':
+		return 1;
+	default:
+		abort();
+	}
+  }
   //  cout << "Establishing control channel... " << flush;
-  NetworkRequestChannel control_channel(20000,connection_handler);
+  NetworkRequestChannel control_channel(sock,connection_handler);
+  cout<<"Server Closed";
 
 }
 
