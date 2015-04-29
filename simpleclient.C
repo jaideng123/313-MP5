@@ -192,8 +192,6 @@ int main(int argc, char * argv[]) {
   hist[0] = temp;
   hist[1] = temp;
   hist[2] = temp;
-  NetworkRequestChannel chan("localhost",20000);
-  sleep(5000);
   Semaphore s(1);
   BoundedBuffer b(bb,&s);
   Arguments arg1;
@@ -253,7 +251,6 @@ int main(int argc, char * argv[]) {
   {
     pthread_join(histWorkers[i], NULL);
   }
-  chan.send_request("quit");
   usleep(1000000);
   
 	printHist();

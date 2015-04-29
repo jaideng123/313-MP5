@@ -31,7 +31,7 @@ public:
 		serveraddr.sin_port = htons(_port_no);
 		int rc = connect(connfd,(struct sockaddr*) &serveraddr,sizeof(serveraddr));
 		if(rc == -1)
-			cout<<"Cannot Connect\n";
+			cout<<"Cannot Connect"<<connfd<<endl;
 		else
 			cout<<"Connected Successfully!\n";
 	}
@@ -41,6 +41,7 @@ public:
 	NetworkRequestChannel(const unsigned short _port_no,
 	void * (*connection_handler) (void *)){
 		//open socket and listen
+		cout<<"Server Called"<<endl;
 		int fd, optval = 1;
 		struct sockaddr_in addr;
 		fd = socket(AF_INET,SOCK_STREAM,0);
@@ -68,7 +69,8 @@ public:
             	continue;
         	}
         	pthread_t _new_thread;
-        	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);
+        	pthread_create(&_new_thread, NULL, connection_handler, &new_fd);\
+			sleep(5);
 			//close(new_fd);
     	}
 	}
